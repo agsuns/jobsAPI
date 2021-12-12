@@ -29,11 +29,36 @@ const createJob = async (req, res) => {
 };
 
 const patchJob = async (req, res) => {
-  res.status(200).send('update job');
+  const { user, params } = req;
+
+  const patchedJob = await JobModel.findOneAndUpdate(
+    {
+      _id: params.id,
+      createdBy: user.userId,
+    },
+    { ...req.body },
+    { runValidators: true, new: true },
+  );
+
+  if (!patchedJob) {
+    throw new NotFound(`Couldn't find job with id ${params.id} to update`);
+  }
+  res.status(200).json(patchedJob);
 };
 
 const deleteJob = async (req, res) => {
-  res.status(200).send('delete job');
+  const { user, params } = req;
+
+  const deleted = await JobModel.deleteOne({
+    _id: params.id,
+    createdBy: user.userId,
+  });
+
+  if (!deleted.deletedCount) {
+    throw new NotFound(`Couldn't delete job with id ${params.id}`);
+  }
+
+  res.status(200).json(deleted);
 };
 
 module.exports = {
